@@ -54,14 +54,34 @@ function forbiddenResponse(request: NextRequest, message: string, status: number
     return NextResponse.redirect(deniedUrl);
 }
 
+function serviceUnavailableResponse(request: NextRequest, error: unknown) {
+    console.error("Authentication proxy could not access the database:", error);
+    if (request.nextUrl.pathname.startsWith("/api/")) {
+        return NextResponse.json(
+            {error: "Authentication services are temporarily unavailable."},
+            {status: 503, headers: {"Retry-After": "30"}},
+        );
+    }
+    return new NextResponse("Service temporarily unavailable.", {
+        status: 503,
+        headers: {"Retry-After": "30"},
+    });
+}
+
 export async function proxy(request: NextRequest) {
     const {pathname} = request.nextUrl;
     if (pathname.startsWith("/_next/") || pathname === "/favicon.ico" ||
+        pathname === "/api/health" ||
         pathname.startsWith("/api/internal/sms/dispatch") || pathname.startsWith("/api/device-events") ||
         /\.(?:svg|png|jpe?g|webp|gif|ico)$/i.test(pathname)) return NextResponse.next();
     if (pathname === "/initial-setup") return NextResponse.redirect(new URL("/login", request.url));
 
-    const setupRequired = await isInitialSetupRequired();
+    let setupRequired: boolean;
+    try {
+        setupRequired = await isInitialSetupRequired();
+    } catch (error) {
+        return serviceUnavailableResponse(request, error);
+    }
     if (setupRequired) {
         if (pathname === "/login" || pathname === "/forgot-password" || pathname === "/api/auth/setup" || pathname === "/api/health") {
             return NextResponse.next();
@@ -73,12 +93,22 @@ export async function proxy(request: NextRequest) {
     }
 
     if (publicApiPaths.has(pathname) || pathname === "/login" || pathname === "/forgot-password") {
-        const session = await getStaffSession(request.cookies.get(STAFF_SESSION_COOKIE)?.value);
+        let session;
+        try {
+            session = await getStaffSession(request.cookies.get(STAFF_SESSION_COOKIE)?.value);
+        } catch (error) {
+            return serviceUnavailableResponse(request, error);
+        }
         if (session && pathname === "/login") return NextResponse.redirect(new URL("/", request.url));
         return NextResponse.next();
     }
 
-    const session = await getStaffSession(request.cookies.get(STAFF_SESSION_COOKIE)?.value);
+    let session;
+    try {
+        session = await getStaffSession(request.cookies.get(STAFF_SESSION_COOKIE)?.value);
+    } catch (error) {
+        return serviceUnavailableResponse(request, error);
+    }
     if (!session) return forbiddenResponse(request, "Sign in to continue.", 401);
 
     const requiredPermission = pathname.startsWith("/api/")
