@@ -1,0 +1,13 @@
+/node_modules/
+/.next/
+/.idea/
+/.vercel/
+/my-app/node_modules/
+/my-app/.next/
+/my-app/.vercel/
+/my-app/.env*
+!/my-app/.env.example
+/my-app/data/
+*.sqlite
+*.sqlite3
+*.db
