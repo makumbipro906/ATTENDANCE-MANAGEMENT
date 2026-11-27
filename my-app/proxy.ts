@@ -1,7 +1,25 @@
 import {NextRequest, NextResponse} from "next/server";
 
 import {getPermissionForPath} from "@/lib/system-permissions";
-import {getStaffSession, isInitialSetupRequired, STAFF_SESSION_COOKIE} from "@/lib/server/staff-auth";
+
+type ProxyAuthState = {setupRequired: boolean; session: {permissions: string[]} | null};
+
+// The proxy runs at the edge and cannot use the PostgreSQL driver, so session checks are
+// delegated to a Node.js route handler. Fetched at most once per request.
+function createAuthLoader(request: NextRequest) {
+    let state: Promise<ProxyAuthState> | null = null;
+    return () => {
+        state ??= fetch(new URL("/api/internal/proxy-auth", request.url), {
+            method: "POST",
+            headers: {cookie: request.headers.get("cookie") ?? ""},
+            cache: "no-store",
+        }).then(async (response) => {
+            if (!response.ok) throw new Error(`Session check failed with status ${response.status}.`);
+            return await response.json() as ProxyAuthState;
+        });
+        return state;
+    };
+}
 
 const publicApiPaths = new Set([
     "/api/auth/login",
@@ -57,11 +75,12 @@ function forbiddenResponse(request: NextRequest, message: string, status: number
 export async function proxy(request: NextRequest) {
     const {pathname} = request.nextUrl;
     if (pathname.startsWith("/_next/") || pathname === "/favicon.ico" ||
-        pathname.startsWith("/api/internal/sms/dispatch") || pathname.startsWith("/api/device-events") ||
+        pathname.startsWith("/api/internal/sms/dispatch") || pathname === "/api/internal/proxy-auth" || pathname.startsWith("/api/device-events") ||
         /\.(?:svg|png|jpe?g|webp|gif|ico)$/i.test(pathname)) return NextResponse.next();
     if (pathname === "/initial-setup") return NextResponse.redirect(new URL("/login", request.url));
 
-    const setupRequired = await isInitialSetupRequired();
+    const loadAuth = createAuthLoader(request);
+    const {setupRequired} = await loadAuth();
     if (setupRequired) {
         if (pathname === "/login" || pathname === "/forgot-password" || pathname === "/api/auth/setup" || pathname === "/api/health") {
             return NextResponse.next();
@@ -73,18 +92,18 @@ export async function proxy(request: NextRequest) {
     }
 
     if (publicApiPaths.has(pathname) || pathname === "/login" || pathname === "/forgot-password") {
-        const session = await getStaffSession(request.cookies.get(STAFF_SESSION_COOKIE)?.value);
+        const {session} = await loadAuth();
         if (session && pathname === "/login") return NextResponse.redirect(new URL("/", request.url));
         return NextResponse.next();
     }
 
-    const session = await getStaffSession(request.cookies.get(STAFF_SESSION_COOKIE)?.value);
+    const {session} = await loadAuth();
     if (!session) return forbiddenResponse(request, "Sign in to continue.", 401);
 
     const requiredPermission = pathname.startsWith("/api/")
         ? permissionForApi(pathname)
         : getPermissionForPath(pathname);
-    if (requiredPermission && !session.permissions.includes(requiredPermission)) {
+    if (requiredPermission && !session.permissions.includes(requiredPermission as string)) {
         return forbiddenResponse(request, "Your role does not have access to this module.", 403);
     }
 

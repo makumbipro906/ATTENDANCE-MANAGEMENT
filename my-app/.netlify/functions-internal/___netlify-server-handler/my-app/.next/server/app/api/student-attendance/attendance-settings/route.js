@@ -1,0 +1,11 @@
+var R=require("../../../../chunks/[turbopack]_runtime.js")("server/app/api/student-attendance/attendance-settings/route.js")
+R.c("server/chunks/my-app_lib_1_tq84mvt0krp._.js")
+R.c("server/chunks/my-app_lib_0br0tu7eu3jw4._.js")
+R.c("server/chunks/[root-of-the-server]__0897f7i_kpaux._.js")
+R.c("server/chunks/_19zqj45ouzu_-._.js")
+R.c("server/chunks/[root-of-the-server]__15bjnu5yieigz._.js")
+R.c("server/chunks/node_modules_zod_v4_classic_external_1h9u5hd8e7zk0.js")
+R.c("server/chunks/node_modules_next_0g8xe7c6fvfgl._.js")
+R.c("server/chunks/0lya_app_api_student-attendance_attendance-settings_route_actions_0ydn_jcxvb4_u.js")
+R.m(32488)
+module.exports=R.m(32488).exports

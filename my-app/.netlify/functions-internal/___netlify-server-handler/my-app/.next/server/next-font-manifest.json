@@ -1,0 +1,179 @@
+{
+  "app": {
+    "[project]/my-app/app/(dashboard)/alerts/page": [
+      "static/media/605ce01b664af129-s.p.0wgildi0cnwt9.woff2",
+      "static/media/07a39a8a4660cc7c-s.p.0r6juujl39pe6.woff2"
+    ],
+    "[project]/my-app/app/(dashboard)/attendance/page": [
+      "static/media/605ce01b664af129-s.p.0wgildi0cnwt9.woff2",
+      "static/media/07a39a8a4660cc7c-s.p.0r6juujl39pe6.woff2"
+    ],
+    "[project]/my-app/app/(dashboard)/attendance/reports/page": [
+      "static/media/605ce01b664af129-s.p.0wgildi0cnwt9.woff2",
+      "static/media/07a39a8a4660cc7c-s.p.0r6juujl39pe6.woff2"
+    ],
+    "[project]/my-app/app/(dashboard)/attendance/today/page": [
+      "static/media/605ce01b664af129-s.p.0wgildi0cnwt9.woff2",
+      "static/media/07a39a8a4660cc7c-s.p.0r6juujl39pe6.woff2"
+    ],
+    "[project]/my-app/app/(dashboard)/audit-log/page": [
+      "static/media/605ce01b664af129-s.p.0wgildi0cnwt9.woff2",
+      "static/media/07a39a8a4660cc7c-s.p.0r6juujl39pe6.woff2"
+    ],
+    "[project]/my-app/app/(dashboard)/biometrics/class/[className]/page": [
+      "static/media/605ce01b664af129-s.p.0wgildi0cnwt9.woff2",
+      "static/media/07a39a8a4660cc7c-s.p.0r6juujl39pe6.woff2"
+    ],
+    "[project]/my-app/app/(dashboard)/biometrics/complete/page": [
+      "static/media/605ce01b664af129-s.p.0wgildi0cnwt9.woff2",
+      "static/media/07a39a8a4660cc7c-s.p.0r6juujl39pe6.woff2"
+    ],
+    "[project]/my-app/app/(dashboard)/biometrics/missing/page": [
+      "static/media/605ce01b664af129-s.p.0wgildi0cnwt9.woff2",
+      "static/media/07a39a8a4660cc7c-s.p.0r6juujl39pe6.woff2"
+    ],
+    "[project]/my-app/app/(dashboard)/biometrics/page": [
+      "static/media/605ce01b664af129-s.p.0wgildi0cnwt9.woff2",
+      "static/media/07a39a8a4660cc7c-s.p.0r6juujl39pe6.woff2"
+    ],
+    "[project]/my-app/app/(dashboard)/biometrics/record/page": [
+      "static/media/605ce01b664af129-s.p.0wgildi0cnwt9.woff2",
+      "static/media/07a39a8a4660cc7c-s.p.0r6juujl39pe6.woff2"
+    ],
+    "[project]/my-app/app/(dashboard)/contacts/class/[className]/page": [
+      "static/media/605ce01b664af129-s.p.0wgildi0cnwt9.woff2",
+      "static/media/07a39a8a4660cc7c-s.p.0r6juujl39pe6.woff2"
+    ],
+    "[project]/my-app/app/(dashboard)/contacts/complete/page": [
+      "static/media/605ce01b664af129-s.p.0wgildi0cnwt9.woff2",
+      "static/media/07a39a8a4660cc7c-s.p.0r6juujl39pe6.woff2"
+    ],
+    "[project]/my-app/app/(dashboard)/contacts/missing/page": [
+      "static/media/605ce01b664af129-s.p.0wgildi0cnwt9.woff2",
+      "static/media/07a39a8a4660cc7c-s.p.0r6juujl39pe6.woff2"
+    ],
+    "[project]/my-app/app/(dashboard)/contacts/page": [
+      "static/media/605ce01b664af129-s.p.0wgildi0cnwt9.woff2",
+      "static/media/07a39a8a4660cc7c-s.p.0r6juujl39pe6.woff2"
+    ],
+    "[project]/my-app/app/(dashboard)/contacts/record/page": [
+      "static/media/605ce01b664af129-s.p.0wgildi0cnwt9.woff2",
+      "static/media/07a39a8a4660cc7c-s.p.0r6juujl39pe6.woff2"
+    ],
+    "[project]/my-app/app/(dashboard)/page": [
+      "static/media/605ce01b664af129-s.p.0wgildi0cnwt9.woff2",
+      "static/media/07a39a8a4660cc7c-s.p.0r6juujl39pe6.woff2"
+    ],
+    "[project]/my-app/app/(dashboard)/profile/page": [
+      "static/media/605ce01b664af129-s.p.0wgildi0cnwt9.woff2",
+      "static/media/07a39a8a4660cc7c-s.p.0r6juujl39pe6.woff2"
+    ],
+    "[project]/my-app/app/(dashboard)/settings/classes/page": [
+      "static/media/605ce01b664af129-s.p.0wgildi0cnwt9.woff2",
+      "static/media/07a39a8a4660cc7c-s.p.0r6juujl39pe6.woff2"
+    ],
+    "[project]/my-app/app/(dashboard)/settings/page": [
+      "static/media/605ce01b664af129-s.p.0wgildi0cnwt9.woff2",
+      "static/media/07a39a8a4660cc7c-s.p.0r6juujl39pe6.woff2"
+    ],
+    "[project]/my-app/app/(dashboard)/settings/sections/page": [
+      "static/media/605ce01b664af129-s.p.0wgildi0cnwt9.woff2",
+      "static/media/07a39a8a4660cc7c-s.p.0r6juujl39pe6.woff2"
+    ],
+    "[project]/my-app/app/(dashboard)/settings/streams/page": [
+      "static/media/605ce01b664af129-s.p.0wgildi0cnwt9.woff2",
+      "static/media/07a39a8a4660cc7c-s.p.0r6juujl39pe6.woff2"
+    ],
+    "[project]/my-app/app/(dashboard)/settings/terms/page": [
+      "static/media/605ce01b664af129-s.p.0wgildi0cnwt9.woff2",
+      "static/media/07a39a8a4660cc7c-s.p.0r6juujl39pe6.woff2"
+    ],
+    "[project]/my-app/app/(dashboard)/settings/years/page": [
+      "static/media/605ce01b664af129-s.p.0wgildi0cnwt9.woff2",
+      "static/media/07a39a8a4660cc7c-s.p.0r6juujl39pe6.woff2"
+    ],
+    "[project]/my-app/app/(dashboard)/sms/failed/page": [
+      "static/media/605ce01b664af129-s.p.0wgildi0cnwt9.woff2",
+      "static/media/07a39a8a4660cc7c-s.p.0r6juujl39pe6.woff2"
+    ],
+    "[project]/my-app/app/(dashboard)/sms/page": [
+      "static/media/605ce01b664af129-s.p.0wgildi0cnwt9.woff2",
+      "static/media/07a39a8a4660cc7c-s.p.0r6juujl39pe6.woff2"
+    ],
+    "[project]/my-app/app/(dashboard)/sms/pending/page": [
+      "static/media/605ce01b664af129-s.p.0wgildi0cnwt9.woff2",
+      "static/media/07a39a8a4660cc7c-s.p.0r6juujl39pe6.woff2"
+    ],
+    "[project]/my-app/app/(dashboard)/sms/sent/page": [
+      "static/media/605ce01b664af129-s.p.0wgildi0cnwt9.woff2",
+      "static/media/07a39a8a4660cc7c-s.p.0r6juujl39pe6.woff2"
+    ],
+    "[project]/my-app/app/(dashboard)/student-attendance/attendance-settings/page": [
+      "static/media/605ce01b664af129-s.p.0wgildi0cnwt9.woff2",
+      "static/media/07a39a8a4660cc7c-s.p.0r6juujl39pe6.woff2"
+    ],
+    "[project]/my-app/app/(dashboard)/student-attendance/daily/page": [
+      "static/media/605ce01b664af129-s.p.0wgildi0cnwt9.woff2",
+      "static/media/07a39a8a4660cc7c-s.p.0r6juujl39pe6.woff2"
+    ],
+    "[project]/my-app/app/(dashboard)/student-attendance/records/page": [
+      "static/media/605ce01b664af129-s.p.0wgildi0cnwt9.woff2",
+      "static/media/07a39a8a4660cc7c-s.p.0r6juujl39pe6.woff2"
+    ],
+    "[project]/my-app/app/(dashboard)/student-attendance/sms-billing/page": [
+      "static/media/605ce01b664af129-s.p.0wgildi0cnwt9.woff2",
+      "static/media/07a39a8a4660cc7c-s.p.0r6juujl39pe6.woff2"
+    ],
+    "[project]/my-app/app/(dashboard)/student-attendance/sms-dashboard/page": [
+      "static/media/605ce01b664af129-s.p.0wgildi0cnwt9.woff2",
+      "static/media/07a39a8a4660cc7c-s.p.0r6juujl39pe6.woff2"
+    ],
+    "[project]/my-app/app/(dashboard)/student-attendance/sms-settings/page": [
+      "static/media/605ce01b664af129-s.p.0wgildi0cnwt9.woff2",
+      "static/media/07a39a8a4660cc7c-s.p.0r6juujl39pe6.woff2"
+    ],
+    "[project]/my-app/app/(dashboard)/students/[id]/page": [
+      "static/media/605ce01b664af129-s.p.0wgildi0cnwt9.woff2",
+      "static/media/07a39a8a4660cc7c-s.p.0r6juujl39pe6.woff2"
+    ],
+    "[project]/my-app/app/(dashboard)/students/archived/page": [
+      "static/media/605ce01b664af129-s.p.0wgildi0cnwt9.woff2",
+      "static/media/07a39a8a4660cc7c-s.p.0r6juujl39pe6.woff2"
+    ],
+    "[project]/my-app/app/(dashboard)/students/page": [
+      "static/media/605ce01b664af129-s.p.0wgildi0cnwt9.woff2",
+      "static/media/07a39a8a4660cc7c-s.p.0r6juujl39pe6.woff2"
+    ],
+    "[project]/my-app/app/Dashboard/roles/page": [
+      "static/media/605ce01b664af129-s.p.0wgildi0cnwt9.woff2",
+      "static/media/07a39a8a4660cc7c-s.p.0r6juujl39pe6.woff2"
+    ],
+    "[project]/my-app/app/Dashboard/users/page": [
+      "static/media/605ce01b664af129-s.p.0wgildi0cnwt9.woff2",
+      "static/media/07a39a8a4660cc7c-s.p.0r6juujl39pe6.woff2"
+    ],
+    "[project]/my-app/app/_not-found/page": [
+      "static/media/605ce01b664af129-s.p.0wgildi0cnwt9.woff2",
+      "static/media/07a39a8a4660cc7c-s.p.0r6juujl39pe6.woff2"
+    ],
+    "[project]/my-app/app/about/page": [
+      "static/media/605ce01b664af129-s.p.0wgildi0cnwt9.woff2",
+      "static/media/07a39a8a4660cc7c-s.p.0r6juujl39pe6.woff2"
+    ],
+    "[project]/my-app/app/access-denied/page": [
+      "static/media/605ce01b664af129-s.p.0wgildi0cnwt9.woff2",
+      "static/media/07a39a8a4660cc7c-s.p.0r6juujl39pe6.woff2"
+    ],
+    "[project]/my-app/app/forgot-password/page": [
+      "static/media/605ce01b664af129-s.p.0wgildi0cnwt9.woff2",
+      "static/media/07a39a8a4660cc7c-s.p.0r6juujl39pe6.woff2"
+    ],
+    "[project]/my-app/app/login/page": [
+      "static/media/605ce01b664af129-s.p.0wgildi0cnwt9.woff2",
+      "static/media/07a39a8a4660cc7c-s.p.0r6juujl39pe6.woff2"
+    ]
+  },
+  "appUsingSizeAdjust": true,
+  "pages": {},
+  "pagesUsingSizeAdjust": false
+}

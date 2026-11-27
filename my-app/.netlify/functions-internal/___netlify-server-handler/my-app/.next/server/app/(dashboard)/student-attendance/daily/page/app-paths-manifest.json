@@ -1,0 +1,3 @@
+{
+  "/(dashboard)/student-attendance/daily/page": "app/(dashboard)/student-attendance/daily/page.js"
+}

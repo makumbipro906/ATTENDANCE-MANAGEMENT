@@ -1,0 +1,3 @@
+{
+  "/(dashboard)/biometrics/page": "app/(dashboard)/biometrics/page.js"
+}
