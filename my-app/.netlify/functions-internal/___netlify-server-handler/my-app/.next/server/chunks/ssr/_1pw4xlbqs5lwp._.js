@@ -1,0 +1,3 @@
+module.exports=[80449,a=>{"use strict";var b=a.i(7997),c=a.i(72759);let d="production"!==process.env.NODE_ENV?function(){let a=Error(" ");return a.name="Instant Validation",a}:null;a.s(["__debugCreateInstantConfigStack",0,d,"default",0,function({children:a}){return(0,b.jsx)(c.f,{children:a})},"instant",0,!1])},26005,function(a){a.n(a.i(80449))},717,(a,b,c)=>{"use strict";b.exports=a.r(24951).vendored["react-rsc"].React}];
+
+//# sourceMappingURL=_1pw4xlbqs5lwp._.js.map

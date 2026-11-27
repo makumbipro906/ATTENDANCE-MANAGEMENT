@@ -1,0 +1,1 @@
+self.__SSG_MANIFEST=new Set(["\u002Fbiometrics\u002Fclass\u002F[className]","\u002Fcontacts\u002Fclass\u002F[className]","\u002Fstudents\u002F[id]"]);self.__SSG_MANIFEST_CB&&self.__SSG_MANIFEST_CB()

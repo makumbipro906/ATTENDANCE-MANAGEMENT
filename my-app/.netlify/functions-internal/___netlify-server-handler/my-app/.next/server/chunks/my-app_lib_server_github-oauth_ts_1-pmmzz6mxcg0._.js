@@ -1,0 +1,23 @@
+module.exports=[28230,t=>t.a(async(e,r)=>{try{var i=t.i(66680),a=t.i(34339),s=e([a]);function n(){let t=process.env.GITHUB_CLIENT_ID?.trim(),e=process.env.GITHUB_CLIENT_SECRET?.trim(),r=process.env.GITHUB_REDIRECT_URI?.trim();if(!t||!e||!r)throw Error("GitHub OAuth is not configured.");let i=new URL(r),a="http:"===i.protocol&&("localhost"===i.hostname||"127.0.0.1"===i.hostname);if("https:"!==i.protocol&&!a||"/api/auth/github/callback"!==i.pathname||i.username||i.password||i.search||i.hash)throw Error("GITHUB_REDIRECT_URI must be the HTTPS GitHub callback URL.");return{clientId:t,clientSecret:e,redirectUri:i.toString()}}function o(t){return(0,i.createHash)("sha256").update(t).digest("hex")}async function u(t,e,r){if("link"===t!=!!e)throw Error("GitHub OAuth state does not match its purpose.");let s=(0,i.randomBytes)(32).toString("base64url"),n=new Date(Date.now()+6e5).toISOString();return await (0,a.h)(async i=>{await i.prepare("DELETE FROM github_oauth_states WHERE expires_at <= CURRENT_TIMESTAMP").run(),await i.prepare(`INSERT INTO github_oauth_states (state_hash, purpose, staff_user_id, return_to, expires_at)
+             VALUES (?, ?, ?, ?, ?)`).run(o(s),t,e??null,"login"===t?function(t){if(!t||!t.startsWith("/")||t.startsWith("//")||t.includes("\\"))return"/";try{let e=new URL(t,"https://orchid.invalid");if("https://orchid.invalid"!==e.origin)return"/";return`${e.pathname}${e.search}${e.hash}`}catch{return"/"}}(r):null,n)}),s}async function c(t){return/^[A-Za-z0-9_-]{43}$/.test(t)?await (0,a.Y)().prepare(`DELETE FROM github_oauth_states
+         WHERE state_hash = ? AND expires_at > CURRENT_TIMESTAMP
+         RETURNING purpose, staff_user_id, return_to`).get(o(t))??null:null}async function h(t){let{clientId:e,clientSecret:r,redirectUri:i}=n(),a=await fetch("https://github.com/login/oauth/access_token",{method:"POST",headers:{Accept:"application/json","Content-Type":"application/json"},body:JSON.stringify({client_id:e,client_secret:r,code:t,redirect_uri:i}),signal:AbortSignal.timeout(1e4)}),s=await a.json();if(!a.ok||!s||"object"!=typeof s||!("access_token"in s)||"string"!=typeof s.access_token||!s.access_token)throw Error("GitHub did not issue an access token.");return s.access_token}async function _(t){let e=await fetch("https://api.github.com/user",{headers:{Accept:"application/vnd.github+json",Authorization:`Bearer ${t}`,"User-Agent":"Orchid-School","X-GitHub-Api-Version":"2022-11-28"},signal:AbortSignal.timeout(1e4)}),r=await e.json();if(!e.ok||!r||"object"!=typeof r||!("id"in r)||"number"!=typeof r.id||!Number.isSafeInteger(r.id)||r.id<1)throw Error("GitHub did not return a valid account identity.");return String(r.id)}async function d(t,e){await (0,a.h)(async r=>{if(!await r.prepare(`UPDATE staff_users
+             SET github_user_id = ?
+             WHERE id = ? AND active = 1
+               AND EXISTS (
+                   SELECT 1
+                   FROM staff_user_roles ur
+                   JOIN roles r ON r.id = ur.role_id
+                   WHERE ur.staff_user_id = staff_users.id
+                     AND LOWER(r.name) = 'super-administrator'
+               )
+             RETURNING id`).get(e,t))throw Error("The linking staff account is no longer eligible.");await r.prepare(`INSERT INTO audit_log (id, actor_type, actor_id, action, entity_type, entity_id, details)
+             VALUES (?, 'admin', ?, 'staff_user.github_linked', 'staff_user', ?, ?)`).run((0,i.randomUUID)(),t,t,JSON.stringify({provider:"github"}))})}async function p(t){let e=await (0,a.Y)().prepare(`SELECT DISTINCT u.id
+         FROM staff_users u
+         JOIN staff_user_roles ur ON ur.staff_user_id = u.id
+         JOIN roles r ON r.id = ur.role_id
+         WHERE u.github_user_id = ? AND u.active = 1
+           AND LOWER(r.name) = 'super-administrator'
+         LIMIT 1`).get(t);return e?.id??null}[a]=s.then?(await s)():s,t.s(["Y",0,"orchid_github_oauth_state","h",0,600,"E",0,c,"w",0,function(t){let{clientId:e,redirectUri:r}=n(),i=new URL("https://github.com/login/oauth/authorize");return i.searchParams.set("client_id",e),i.searchParams.set("redirect_uri",r),i.searchParams.set("scope","read:user"),i.searchParams.set("state",t),i.toString()},"r",0,u,"i",0,h,"P",0,p,"T",0,_,"j",0,function(){return!!(process.env.GITHUB_CLIENT_ID?.trim()&&process.env.GITHUB_CLIENT_SECRET?.trim()&&process.env.GITHUB_REDIRECT_URI?.trim())},"b",0,d,"x",0,function(t,e){return!!t&&!!e&&!!/^[A-Za-z0-9_-]{43}$/.test(t)&&!!/^[A-Za-z0-9_-]{43}$/.test(e)&&(0,i.timingSafeEqual)(Buffer.from(t),Buffer.from(e))}]),r()}catch(t){r(t)}},!1)];
+
+//# sourceMappingURL=my-app_lib_server_github-oauth_ts_1-pmmzz6mxcg0._.js.map

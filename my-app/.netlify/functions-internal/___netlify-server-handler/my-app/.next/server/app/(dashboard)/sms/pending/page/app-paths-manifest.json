@@ -1,0 +1,3 @@
+{
+  "/(dashboard)/sms/pending/page": "app/(dashboard)/sms/pending/page.js"
+}

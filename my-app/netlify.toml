@@ -1,0 +1,6 @@
+# Netlify deployment settings for the Orchid School Next.js app (workspace: my-app).
+[build.environment]
+  # The app requires Node.js 22.13+ in the 22.x line.
+  NODE_VERSION = "22"
+  # Each serverless instance keeps its own pool; keep Supabase pooler connections low.
+  DATABASE_POOL_MAX = "1"
