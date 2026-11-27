@@ -1,7 +1,23 @@
 import {NextRequest, NextResponse} from "next/server";
 
 import {getPermissionForPath} from "@/lib/system-permissions";
-import {getStaffSession, isInitialSetupRequired, STAFF_SESSION_COOKIE} from "@/lib/server/staff-auth";
+import type {SystemPermissionKey} from "@/lib/system-permissions";
+
+type ProxyAuthState = {
+    setupRequired: boolean;
+    session: {permissions: SystemPermissionKey[]} | null;
+};
+
+// The proxy runs as an edge function, where the Postgres driver is unavailable,
+// so session and setup checks are delegated to a Node.js route handler.
+async function getAuthState(request: NextRequest): Promise<ProxyAuthState> {
+    const response = await fetch(new URL("/api/internal/proxy-auth", request.url), {
+        headers: {cookie: request.headers.get("cookie") ?? ""},
+        cache: "no-store",
+    });
+    if (!response.ok) throw new Error(`Auth check failed with status ${response.status}`);
+    return await response.json() as ProxyAuthState;
+}
 
 const publicApiPaths = new Set([
     "/api/auth/login",
@@ -57,11 +73,18 @@ function forbiddenResponse(request: NextRequest, message: string, status: number
 export async function proxy(request: NextRequest) {
     const {pathname} = request.nextUrl;
     if (pathname.startsWith("/_next/") || pathname === "/favicon.ico" ||
-        pathname.startsWith("/api/internal/sms/dispatch") || pathname.startsWith("/api/device-events") ||
+        pathname.startsWith("/api/internal/sms/dispatch") || pathname === "/api/internal/proxy-auth" || pathname.startsWith("/api/device-events") ||
         /\.(?:svg|png|jpe?g|webp|gif|ico)$/i.test(pathname)) return NextResponse.next();
     if (pathname === "/initial-setup") return NextResponse.redirect(new URL("/login", request.url));
 
-    const setupRequired = await isInitialSetupRequired();
+    let authState: ProxyAuthState;
+    try {
+        authState = await getAuthState(request);
+    } catch (error) {
+        console.error("Proxy auth check failed", error);
+        return forbiddenResponse(request, "Authentication service is unavailable. Try again shortly.", 503);
+    }
+    const {setupRequired, session} = authState;
     if (setupRequired) {
         if (pathname === "/login" || pathname === "/forgot-password" || pathname === "/api/auth/setup" || pathname === "/api/health") {
             return NextResponse.next();
@@ -73,12 +96,10 @@ export async function proxy(request: NextRequest) {
     }
 
     if (publicApiPaths.has(pathname) || pathname === "/login" || pathname === "/forgot-password") {
-        const session = await getStaffSession(request.cookies.get(STAFF_SESSION_COOKIE)?.value);
         if (session && pathname === "/login") return NextResponse.redirect(new URL("/", request.url));
         return NextResponse.next();
     }
 
-    const session = await getStaffSession(request.cookies.get(STAFF_SESSION_COOKIE)?.value);
     if (!session) return forbiddenResponse(request, "Sign in to continue.", 401);
 
     const requiredPermission = pathname.startsWith("/api/")
