@@ -6,7 +6,7 @@ import {getDatabase, withPostgresTransaction} from "@/lib/server/database";
 import {SYSTEM_PERMISSIONS, type SystemPermissionKey} from "@/lib/system-permissions";
 import {isYoolaSmsConfigured, sendYoolaSms} from "@/lib/server/yoola-sms";
 
-export const STAFF_SESSION_COOKIE = "orchid_staff_session";
+export {STAFF_SESSION_COOKIE} from "@/lib/staff-session-cookie";
 export const PASSWORD_SETUP_COOKIE = "orchid_password_setup";
 export const STAFF_SESSION_MAX_AGE_SECONDS = 60 * 60 * 8;
 export const STAFF_SESSION_HEARTBEAT_TIMEOUT_SECONDS = 60;

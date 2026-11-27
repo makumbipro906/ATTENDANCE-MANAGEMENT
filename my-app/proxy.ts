@@ -1,7 +1,19 @@
 import {NextRequest, NextResponse} from "next/server";
 
-import {getPermissionForPath} from "@/lib/system-permissions";
-import {getStaffSession, isInitialSetupRequired, STAFF_SESSION_COOKIE} from "@/lib/server/staff-auth";
+import {getPermissionForPath, type SystemPermissionKey} from "@/lib/system-permissions";
+
+/**
+ * The proxy is the only place that enforces module permissions, so it must not import
+ * Node-only modules: some hosts run the proxy as an Edge Function, where the PostgreSQL
+ * driver and the filesystem are unavailable. The setup and session lookups therefore run in
+ * a Node.js route handler that the proxy calls at most once per request.
+ */
+const PROXY_AUTH_PATH = "/api/internal/proxy-auth";
+
+type ProxyAuthState = {
+    setupRequired: boolean;
+    session: {permissions: SystemPermissionKey[]} | null;
+};
 
 const publicApiPaths = new Set([
     "/api/auth/login",
@@ -55,7 +67,7 @@ function forbiddenResponse(request: NextRequest, message: string, status: number
 }
 
 function serviceUnavailableResponse(request: NextRequest, error: unknown) {
-    console.error("Authentication proxy could not access the database:", error);
+    console.error("Authentication proxy could not reach the database:", error);
     if (request.nextUrl.pathname.startsWith("/api/")) {
         return NextResponse.json(
             {error: "Authentication services are temporarily unavailable."},
@@ -68,20 +80,46 @@ function serviceUnavailableResponse(request: NextRequest, error: unknown) {
     });
 }
 
+/**
+ * Loads the caller's setup and session state from the Node.js auth route. The lookup runs
+ * at most once per request, even though the proxy needs the state in several branches.
+ */
+function createAuthLoader(request: NextRequest) {
+    let pending: Promise<ProxyAuthState> | null = null;
+    return () => {
+        pending ??= (async () => {
+            const response = await fetch(new URL(PROXY_AUTH_PATH, request.url), {
+                headers: {cookie: request.headers.get("cookie") ?? ""},
+                cache: "no-store",
+            });
+            if (!response.ok) {
+                throw new Error(`The authentication route answered with status ${response.status}.`);
+            }
+            return await response.json() as ProxyAuthState;
+        })();
+        return pending;
+    };
+}
+
 export async function proxy(request: NextRequest) {
     const {pathname} = request.nextUrl;
     if (pathname.startsWith("/_next/") || pathname === "/favicon.ico" ||
         pathname === "/api/health" ||
+        // The proxy calls this route itself, so it must never be intercepted again.
+        pathname.startsWith(PROXY_AUTH_PATH) ||
         pathname.startsWith("/api/internal/sms/dispatch") || pathname.startsWith("/api/device-events") ||
         /\.(?:svg|png|jpe?g|webp|gif|ico)$/i.test(pathname)) return NextResponse.next();
     if (pathname === "/initial-setup") return NextResponse.redirect(new URL("/login", request.url));
 
-    let setupRequired: boolean;
+    const loadAuth = createAuthLoader(request);
+
+    let authState: ProxyAuthState;
     try {
-        setupRequired = await isInitialSetupRequired();
+        authState = await loadAuth();
     } catch (error) {
         return serviceUnavailableResponse(request, error);
     }
+    const {setupRequired, session} = authState;
     if (setupRequired) {
         if (pathname === "/login" || pathname === "/forgot-password" || pathname === "/api/auth/setup" || pathname === "/api/health") {
             return NextResponse.next();
@@ -93,22 +131,10 @@ export async function proxy(request: NextRequest) {
     }
 
     if (publicApiPaths.has(pathname) || pathname === "/login" || pathname === "/forgot-password") {
-        let session;
-        try {
-            session = await getStaffSession(request.cookies.get(STAFF_SESSION_COOKIE)?.value);
-        } catch (error) {
-            return serviceUnavailableResponse(request, error);
-        }
         if (session && pathname === "/login") return NextResponse.redirect(new URL("/", request.url));
         return NextResponse.next();
     }
 
-    let session;
-    try {
-        session = await getStaffSession(request.cookies.get(STAFF_SESSION_COOKIE)?.value);
-    } catch (error) {
-        return serviceUnavailableResponse(request, error);
-    }
     if (!session) return forbiddenResponse(request, "Sign in to continue.", 401);
 
     const requiredPermission = pathname.startsWith("/api/")
