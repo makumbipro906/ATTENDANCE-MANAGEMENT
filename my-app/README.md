@@ -78,9 +78,20 @@ Do not point Vercel Preview deployments at the production database; use separate
 
 To enable automatic deployments, import the private GitHub repository through Vercel's **Add New → Project** flow (or connect it in **Project Settings → Git**), set **Root Directory** to `my-app`, and enable deployments for the desired branch. Vercel then creates Preview deployments for pull requests and Production deployments for the production branch. This uses Vercel's Git integration; no Vercel token or deployment secret is needed in this repository.
 
+### Deploy to Netlify
+
+Netlify runs Next.js proxy code as an Edge Function, where the Node.js PostgreSQL driver and the filesystem are unavailable. The proxy therefore stays free of Node-only modules and asks the `/api/internal/proxy-auth` route for the caller's session and setup state, so the same code deploys to Vercel and Netlify.
+
+This repository is an npm workspace, so Netlify needs two settings:
+
+- **Base directory** — leave it unset (the repository root), so dependency installation and the build command run where the root `package-lock.json` lives.
+- **Package directory** — set it to `my-app`, so Netlify reads `my-app/netlify.toml`. All paths in that file are relative to the base directory.
+
+`my-app/netlify.toml` sets the build command to `npm run build`, pins Node.js to the 22.x line, and sets `DATABASE_POOL_MAX` to `1`. Add the same environment variables as for Vercel (`DATABASE_URL`, `DATABASE_POOL_MAX`, the SMS settings, `DEVICE_WEBHOOK_TOKEN`, and the optional GitHub OAuth values) in **Site configuration → Environment variables**. After deployment, check `https://<your-domain>/api/health`.
+
 ### GitHub developer workflows
 
-The repository includes GitHub Actions CI that runs `npm ci`, `npm run check`, and `npm run build` from `my-app` on pushes and pull requests. Issue and pull-request templates remind contributors not to include credentials or real school records. GitHub repository access controls who can read or create issues and pull requests; keep the repository private and grant access only to trusted developers.
+The repository includes GitHub Actions CI that runs `npm ci`, `npm run check`, and `npm run build` from `my-app` on pushes and pull requests. The lockfile lives at the repository root because this is an npm workspace, so the workflow caches it from there. Issue and pull-request templates remind contributors not to include credentials or real school records. GitHub repository access controls who can read or create issues and pull requests; keep the repository private and grant access only to trusted developers.
 
 ### Optional GitHub sign-in for Super-Administrators
 
@@ -107,6 +118,7 @@ The selected backup policy is Supabase-managed daily backups with 30-day retenti
 3. Staff activate accounts and recover passwords with a six-digit code sent to their registered phone. Codes expire after five minutes, can be resent once per minute, and allow at most five verification attempts. Active staff sign in with their permanent password.
 4. Configure module access in Roles & Permissions. Unchecked modules are locked in navigation and rejected by the page/API access checks. The Super-Administrator role always has full system access.
 5. Passwords are stored as scrypt hashes. Staff session cookies are HTTP-only browser-session cookies with an eight-hour absolute expiry and a 60-second active-tab heartbeat lease. Closing every app tab stops heartbeats, so the server rejects the session after the lease expires; an open tab keeps other tabs in the same session active. Logout revokes the server session immediately, and failed password attempts are temporarily rate-limited.
+6. The proxy in `proxy.ts` is the only place that enforces module permissions, for both pages and API routes. It must not import Node-only modules, because Netlify runs proxy code as an Edge Function where the PostgreSQL driver and the filesystem are unavailable. The proxy therefore asks `/api/internal/proxy-auth` — a Node.js route handler — for the caller's setup state and permissions, and that route is the only place where a session is read for access decisions. The route answers with `503` when the database cannot be reached, and the proxy turns a failed lookup into a "service temporarily unavailable" response rather than an internal server error. The route only ever reports on the session of the request that called it.
 
 Do not treat a missing scan as an absence without school calendar and cutoff rules. Review deployment backups, provider-specific delivery callbacks, and privacy/retention policies before production use.
 

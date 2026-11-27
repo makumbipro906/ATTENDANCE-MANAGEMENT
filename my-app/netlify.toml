@@ -1,0 +1,15 @@
+# Netlify deployment settings for the Orchid School Next.js app.
+#
+# This repository is an npm workspace: the application lives in `my-app/` and the
+# lockfile lives at the repository root. Keep the Netlify **base directory** unset (the
+# repository root) so that dependency installation and the build command run where the
+# lockfile is, and set the **package directory** to `my-app` so Netlify picks up this
+# file. Paths below are relative to the base directory.
+[build]
+  command = "npm run build"
+
+[build.environment]
+  # The app requires Node.js 22.13 or later in the 22.x line.
+  NODE_VERSION = "22"
+  # Each serverless instance keeps its own pool; keep Supabase pooler connections low.
+  DATABASE_POOL_MAX = "1"
