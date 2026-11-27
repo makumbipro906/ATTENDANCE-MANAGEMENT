@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import {useEffect, useState, type FormEvent} from "react";
+import {Suspense, useEffect, useState, type FormEvent} from "react";
+import {useSearchParams} from "next/navigation";
 import {
     ArrowLeft,
     CalendarDays,
@@ -31,9 +32,17 @@ type StaffProfile = {
     passwordConfigured: boolean;
 };
 
+type GithubStatus = {enabled: boolean; eligible?: boolean; connected?: boolean};
 type PasswordVisibility = {current: boolean; next: boolean; confirm: boolean};
 
 export default function ProfilePage() {
+    return <Suspense fallback={<div className="page-content my-profile-page"><div aria-live="polite" className="profile-loading" role="status">Loading your account…</div></div>}>
+        <ProfileContent/>
+    </Suspense>;
+}
+
+function ProfileContent() {
+    const searchParams = useSearchParams();
     const [profile, setProfile] = useState<StaffProfile | null>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -47,6 +56,20 @@ export default function ProfilePage() {
     const [visibility, setVisibility] = useState<PasswordVisibility>({current: false, next: false, confirm: false});
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
+    const [githubStatus, setGithubStatus] = useState<GithubStatus | null>(null);
+    const [githubStatusError, setGithubStatusError] = useState("");
+    const [linkingGithub, setLinkingGithub] = useState(false);
+    const githubErrors: Record<string, string> = {
+        unavailable: "GitHub account linking is not configured.",
+        invalid_state: "The GitHub linking request expired or was invalid. Please try again.",
+        cancelled: "GitHub account linking was cancelled.",
+        already_linked: "That GitHub account is already linked to another staff member.",
+        failed: "GitHub account linking could not be completed. Please try again.",
+    };
+    const displayedError = error || githubErrors[searchParams.get("github_error") ?? ""] || "";
+    const displayedSuccess = success || (searchParams.get("github") === "connected"
+        ? "Your GitHub account is linked. You can now use it to sign in."
+        : "");
 
     useEffect(() => {
         const controller = new AbortController();
@@ -74,6 +97,41 @@ export default function ProfilePage() {
         void loadProfile();
         return () => controller.abort();
     }, []);
+
+    useEffect(() => {
+        const controller = new AbortController();
+        fetch("/api/auth/github/status", {cache: "no-store", signal: controller.signal})
+            .then(async (response) => {
+                const result = await response.json() as GithubStatus & {error?: string};
+                if (!response.ok) throw new Error(result.error || "GitHub sign-in status could not be loaded.");
+                if (!controller.signal.aborted) setGithubStatus(result);
+            })
+            .catch((statusError: unknown) => {
+                if (!controller.signal.aborted) {
+                    setGithubStatusError(statusError instanceof Error
+                        ? statusError.message
+                        : "GitHub sign-in status could not be loaded.");
+                }
+            });
+        return () => controller.abort();
+    }, []);
+
+    async function linkGithubAccount() {
+        setError("");
+        setSuccess("");
+        setLinkingGithub(true);
+        try {
+            const response = await fetch("/api/auth/github/link", {method: "POST"});
+            const result = await response.json() as {authorizationUrl?: string; error?: string};
+            if (!response.ok || !result.authorizationUrl) {
+                throw new Error(result.error || "GitHub account linking could not be started.");
+            }
+            window.location.assign(result.authorizationUrl);
+        } catch (linkError) {
+            setError(linkError instanceof Error ? linkError.message : "GitHub account linking could not be started.");
+            setLinkingGithub(false);
+        }
+    }
 
     async function saveProfile(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
@@ -147,14 +205,43 @@ export default function ProfilePage() {
                 </Button>
             </header>
 
-            {error && <p className="profile-notice profile-notice-error" role="alert">{error}</p>}
-            {success && <p className="profile-notice profile-notice-success" role="status"><CheckCircle2 aria-hidden="true" size={17}/>{success}</p>}
+            {displayedError && <p className="profile-notice profile-notice-error" role="alert">{displayedError}</p>}
+            {displayedSuccess && <p className="profile-notice profile-notice-success" role="status"><CheckCircle2 aria-hidden="true" size={17}/>{displayedSuccess}</p>}
 
             {loading ? (
                 <div aria-live="polite" className="profile-loading" role="status">Loading your account…</div>
             ) : profile ? (
                 <div className="my-profile-layout">
                     <main className="my-profile-main">
+                        {profile.roleNames.some((name) => name.toLocaleLowerCase() === "super-administrator") && (
+                            <section aria-labelledby="github-signin-heading" className="my-profile-card">
+                                <div className="profile-card-heading">
+                                    <span className="profile-card-icon"><ShieldCheck aria-hidden="true" size={19}/></span>
+                                    <div>
+                                        <h2 id="github-signin-heading">GitHub sign-in</h2>
+                                        <p>Link your GitHub account as an optional sign-in method.</p>
+                                    </div>
+                                </div>
+                                {githubStatusError ? (
+                                    <p className="profile-notice profile-notice-error" role="alert">{githubStatusError}</p>
+                                ) : githubStatus?.enabled ? (
+                                    <>
+                                        <p>{githubStatus.connected
+                                            ? "A GitHub account is linked to this Super-Administrator."
+                                            : "No GitHub account is linked. Password and SMS sign-in remain available."}</p>
+                                        <div className="profile-form-actions">
+                                            <Button disabled={linkingGithub} onClick={linkGithubAccount} type="button">
+                                                {linkingGithub
+                                                    ? "Connecting to GitHub…"
+                                                    : githubStatus.connected ? "Change linked account" : "Link GitHub account"}
+                                            </Button>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <p>GitHub sign-in is not configured. Existing sign-in methods are unchanged.</p>
+                                )}
+                            </section>
+                        )}
                         <section aria-labelledby="personal-information-heading" className="my-profile-card">
                             <div className="profile-card-heading">
                                 <span className="profile-card-icon"><UserRound aria-hidden="true" size={19}/></span>

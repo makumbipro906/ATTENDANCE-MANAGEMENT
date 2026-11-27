@@ -60,11 +60,11 @@ Example normalized event:
 
 The receiver retains verified, rejected, unknown-student and duplicate events; it records attendance and queues the guardian SMS in the same PostgreSQL transaction. Unknown students are never assigned by guess. Missing phone numbers create a blocked notification without losing attendance. A unique device/event key prevents delivery retries from creating repeated attendance, and one recognized check-in per student, school-local day, and event type is enforced. The current device endpoint expects the normalized contract above; the Hikvision-specific adapter cannot be safely completed until the exact terminal model, firmware, event subscription mode, and network setup are known. Hikvision's official SDK/download portal requires a Hikvision account for access: [official SDK/download portal](https://www.hikvision.com/en/support/download/sdk/).
 
-The application connects to PostgreSQL from server-side Next.js [Route Handlers](https://nextjs.org/docs/app/api-reference/file-conventions/route); it requires Node.js 22.13 or newer and a reachable Supabase project.
+The application connects to PostgreSQL from server-side Next.js [Route Handlers](https://nextjs.org/docs/app/api-reference/file-conventions/route); it requires Node.js 22.13 or later in the Node 22.x line and a reachable Supabase project.
 
 ### Deploy to Vercel
 
-The project is an npm workspace. Push the repository to a Git provider, import it into Vercel, and set the project **Root Directory** to `my-app`. Use Node.js 22.x or newer and the default Next.js build command (`npm run build`). The CA certificate and schema migration are included in the server bundles; Vercel does not need access to your local `.env.local`.
+The project is an npm workspace. Push the repository to a Git provider, import it into Vercel, and set the project **Root Directory** to `my-app`. Use Node.js 22.13 or later in the Node 22.x line and the default Next.js build command (`npm run build`). The CA certificate and schema migration are included in the server bundles; Vercel does not need access to your local `.env.local`.
 
 Add these as Vercel **Production** environment variables (do not use `NEXT_PUBLIC_` prefixes):
 
@@ -72,14 +72,33 @@ Add these as Vercel **Production** environment variables (do not use `NEXT_PUBLI
 - `DATABASE_POOL_MAX` — `1`.
 - `SMS_PROVIDER_URL`, `SMS_PROVIDER_TOKEN`, `SMS_PROVIDER_SENDER`, and `SMS_DISPATCH_TOKEN` — copy the working server-side SMS settings from your local environment into Vercel's encrypted environment-variable settings.
 - `DEVICE_WEBHOOK_TOKEN` — required only when connecting an attendance device.
+- `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, and `GITHUB_REDIRECT_URI` — optional; required only for Super-Administrator GitHub sign-in.
 
-Do not point Vercel Preview deployments at the production database; use separate Supabase credentials/database for Preview or leave those variables unset. After deployment, check `https://<your-domain>/api/health`. Then create the first administrator with the production SMS provider configured; administrator setup is one-time and your production database currently has no staff account.
+Do not point Vercel Preview deployments at the production database; use separate Supabase credentials/database for Preview or leave those variables unset. After deployment, check `https://<your-domain>/api/health`. For a fresh database, create the first administrator with the production SMS provider configured; administrator setup is one-time. For the already-imported database, sign in with an existing staff account instead.
+
+To enable automatic deployments, import the private GitHub repository through Vercel's **Add New → Project** flow (or connect it in **Project Settings → Git**), set **Root Directory** to `my-app`, and enable deployments for the desired branch. Vercel then creates Preview deployments for pull requests and Production deployments for the production branch. This uses Vercel's Git integration; no Vercel token or deployment secret is needed in this repository.
+
+### GitHub developer workflows
+
+The repository includes GitHub Actions CI that runs `npm ci`, `npm run check`, and `npm run build` from `my-app` on pushes and pull requests. Issue and pull-request templates remind contributors not to include credentials or real school records. GitHub repository access controls who can read or create issues and pull requests; keep the repository private and grant access only to trusted developers.
+
+### Optional GitHub sign-in for Super-Administrators
+
+1. Create a GitHub **OAuth App**. Set its Authorization callback URL to the exact deployed URL `https://<your-domain>/api/auth/github/callback`. Use a separate OAuth App for local development if needed.
+2. Add the app's client ID, client secret, and that exact callback URL as server-only `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, and `GITHUB_REDIRECT_URI` settings in Vercel (and `.env.local` for local development). Never add the client secret to Git, GitHub Actions, browser code, or a `NEXT_PUBLIC_` variable.
+3. Sign in to Orchid School using an existing Super-Administrator account, open **My Profile**, and link the intended GitHub account. The linked GitHub account can then sign in from the login page. Only active accounts with the Super-Administrator role are eligible; password and SMS-based sign-in remain available.
+
+The application requests only the GitHub `read:user` scope, stores the stable GitHub account ID (not an OAuth token), validates a one-time state value on callback, and does not grant GitHub sign-in to other staff roles. Enable two-factor authentication on the GitHub account. The database migration is applied automatically at first database access.
 
 The SMS dispatch route currently accepts authenticated **POST** requests. Vercel Cron invokes **GET** requests, and Vercel Hobby schedules are limited to once daily; that is too slow for attendance notifications. Use an external scheduler that can send a POST with `x-sms-dispatch-token`, or choose a plan/scheduler that supports the frequency you need. The device webhook likewise remains unavailable until `DEVICE_WEBHOOK_TOKEN` and the device adapter are configured.
 
 ### How Supabase works with this system
 
 Supabase hosts the PostgreSQL database; the Next.js server connects to its Transaction pooler using `pg`. The browser never connects directly to the database: it calls the app's server routes, which read and write PostgreSQL. Supabase Auth is not used—the app stores its own staff accounts and hashed passwords in PostgreSQL, and sends one-time codes through the configured SMS provider. Vercel runs the web/server code, while Supabase keeps the data independently, so redeploying the app does not erase database records.
+
+### Database backups
+
+The selected backup policy is Supabase-managed daily backups with 30-day retention. Supabase's current managed-backup retention depends on the plan: 7 days on Pro, 14 days on Team, and 30 days on Enterprise. Therefore, 30-day retention requires an Enterprise subscription and must be enabled/confirmed in Supabase's project billing and backup settings; this repository cannot upgrade the plan or configure the dashboard on your behalf. Do not place database dumps or school data in GitHub.
 
 ### Staff sign-in and permissions
 

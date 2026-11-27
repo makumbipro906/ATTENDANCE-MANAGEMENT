@@ -1,0 +1,40 @@
+gitname: Bug report
+description: Report a reproducible problem in Orchid School.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: "Do not include student, guardian, or staff personal information, credentials, database connection strings, or production records."
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened?
+      description: Describe the problem without sharing personal or sensitive data.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      placeholder: "1. Go to ...\n2. Select ...\n3. See the error"
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Browser, operating system, and deployment environment; do not include URLs containing tokens.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant error or logs
+      description: Redact secrets and personal information before sharing.

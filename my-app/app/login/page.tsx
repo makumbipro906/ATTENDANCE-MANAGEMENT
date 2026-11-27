@@ -1,8 +1,8 @@
 "use client";
 
-import {useEffect, useState, type FormEvent} from "react";
+import {Suspense, useEffect, useState, type FormEvent} from "react";
 import Link from "next/link";
-import {useRouter} from "next/navigation";
+import {useRouter, useSearchParams} from "next/navigation";
 import {ArrowLeft, Eye, EyeOff, GraduationCap, LoaderCircle, LockKeyhole, UserRound} from "lucide-react";
 
 import {Button} from "@/components/ui/button";
@@ -22,7 +22,12 @@ function safeNextPath(value: string | null) {
 }
 
 export default function LoginPage() {
+    return <Suspense fallback={null}><LoginForm/></Suspense>;
+}
+
+function LoginForm() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [permanentPassword, setPermanentPassword] = useState("");
@@ -36,6 +41,17 @@ export default function LoginPage() {
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState("");
     const [notice, setNotice] = useState("");
+    const [githubEnabled, setGithubEnabled] = useState(false);
+    const [githubStatusError, setGithubStatusError] = useState("");
+    const githubErrors: Record<string, string> = {
+        unavailable: "GitHub sign-in is not configured. Use your username and password instead.",
+        invalid_state: "The GitHub sign-in request expired or was invalid. Please try again.",
+        cancelled: "GitHub sign-in was cancelled.",
+        not_linked: "This GitHub account is not linked to an active Super-Administrator account.",
+        failed: "GitHub sign-in could not be completed. Please try again.",
+    };
+    const displayedError = error || githubErrors[searchParams.get("github_error") ?? ""] || "";
+    const githubLoginHref = `/api/auth/github/login?next=${encodeURIComponent(safeNextPath(searchParams.get("next")))}`;
 
     useEffect(() => {
         if (!resendAt) return;
@@ -44,6 +60,24 @@ export default function LoginPage() {
         const timer = window.setInterval(updateCountdown, 1000);
         return () => window.clearInterval(timer);
     }, [resendAt]);
+
+    useEffect(() => {
+        const controller = new AbortController();
+        fetch("/api/auth/github/status", {cache: "no-store", signal: controller.signal})
+            .then(async (response) => {
+                const payload = await response.json() as {enabled?: boolean; error?: string};
+                if (!response.ok) throw new Error(payload.error || "GitHub sign-in status could not be loaded.");
+                if (!controller.signal.aborted) setGithubEnabled(Boolean(payload.enabled));
+            })
+            .catch((statusError: unknown) => {
+                if (!controller.signal.aborted) {
+                    setGithubStatusError(statusError instanceof Error
+                        ? statusError.message
+                        : "GitHub sign-in status could not be loaded.");
+                }
+            });
+        return () => controller.abort();
+    }, []);
 
     function acceptOtpChallenge(payload: OtpResponse) {
         setChallenge(payload);
@@ -74,7 +108,7 @@ export default function LoginPage() {
                 return;
             }
             if (payload.ok) {
-                router.replace(safeNextPath(new URLSearchParams(window.location.search).get("next")));
+                router.replace(safeNextPath(searchParams.get("next")));
                 router.refresh();
                 return;
             }
@@ -130,7 +164,7 @@ export default function LoginPage() {
             });
             const payload = await response.json() as {error?: string};
             if (!response.ok) throw new Error(payload.error || "The one-time code could not be verified.");
-            router.replace(safeNextPath(new URLSearchParams(window.location.search).get("next")));
+            router.replace(safeNextPath(searchParams.get("next")));
             router.refresh();
         } catch (verifyError) {
             setError(verifyError instanceof Error ? verifyError.message : "The one-time code could not be verified.");
@@ -219,7 +253,7 @@ export default function LoginPage() {
                                     <LockKeyhole aria-hidden="true" className="login-input-icon" size={17}/>
                                 </span>
                             </label>
-                            {error && <p className="login-error" role="alert">{error}</p>}
+                            {displayedError && <p className="login-error" role="alert">{displayedError}</p>}
                             <Button className="login-button" disabled={busy || otpCode.length !== 6} type="submit">
                                 {busy
                                     ? <><LoaderCircle aria-hidden="true" className="login-spinner" size={17}/>Verifying...</>
@@ -244,7 +278,7 @@ export default function LoginPage() {
                                 <span>Confirm new password <b>*</b></span>
                                 <input autoComplete="new-password" minLength={12} onChange={(event) => setPasswordConfirmation(event.target.value)} required type="password" value={passwordConfirmation}/>
                             </label>
-                            {error && <p className="login-error" role="alert">{error}</p>}
+                            {displayedError && <p className="login-error" role="alert">{displayedError}</p>}
                             <Button className="login-button" disabled={busy} type="submit">
                                 {busy ? "Saving password..." : "Activate account"}
                             </Button>
@@ -281,13 +315,20 @@ export default function LoginPage() {
                                 </span>
                             </label>
                             <div className="forgot-password"><Link href="/forgot-password">Forgot password?</Link></div>
-                            {error && <p className="login-error" role="alert">{error}</p>}
+                            {displayedError && <p className="login-error" role="alert">{displayedError}</p>}
                             <Button className="login-button" disabled={busy} type="submit">
                                 {busy
                                     ? <><LoaderCircle aria-hidden="true" className="login-spinner" size={17}/>Signing in...</>
                                     : "Sign In"}
                             </Button>
                         </form>
+                    )}
+                    {githubStatusError && step === "credentials" &&
+                        <p className="login-error" role="status">{githubStatusError}</p>}
+                    {githubEnabled && step === "credentials" && (
+                        <Button asChild className="login-button" variant="outline">
+                            <a href={githubLoginHref}>Continue with GitHub</a>
+                        </Button>
                     )}
                 </section>
                 <footer className="login-footer">Copyright © 2026 Orchid School. All Rights Reserved.</footer>

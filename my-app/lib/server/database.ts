@@ -131,12 +131,14 @@ async function initializeDatabase() {
     const pool = getPool();
     if (!globalThis.orchidPostgresInitialization) {
         globalThis.orchidPostgresInitialization = (async () => {
-            const migration = readFileSync(
-                join(process.cwd(), "database", "migrations", "001_initial_schema.sql"),
-                "utf8",
-            );
-            for (const statement of migration.split(/;\s*(?:\r?\n|$)/).filter((item) => item.trim())) {
-                await pool.query(statement);
+            const migrations = [
+                readFileSync(join(process.cwd(), "database", "migrations", "001_initial_schema.sql"), "utf8"),
+                readFileSync(join(process.cwd(), "database", "migrations", "002_github_oauth.sql"), "utf8"),
+            ];
+            for (const migration of migrations) {
+                for (const statement of migration.split(/;\s*(?:\r?\n|$)/).filter((item) => item.trim())) {
+                    await pool.query(statement);
+                }
             }
             for (const [index, permission] of SYSTEM_PERMISSIONS.entries()) {
                 await pool.query(

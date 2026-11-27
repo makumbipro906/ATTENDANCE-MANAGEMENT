@@ -7,6 +7,7 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     "/*": [
       "./database/migrations/001_initial_schema.sql",
+      "./database/migrations/002_github_oauth.sql",
       "./lib/supabase/prod-ca-2021.crt",
     ],
   },
